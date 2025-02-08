@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juniper Green</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            text-align: center;
+            background-color: #222;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .grid {
+            display: grid;
+            gap: 10px;
+            margin: auto;
+            visibility: hidden;
+        }
+        .number {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            background-color: gray;
+            border-radius: 10px;
+            cursor: pointer;
+            color: white;
+            font-weight: bold;
+            transition: background-color 0.2s ease, color 0.2s ease;
+            height: 60px;
+            width: 60px;
+        }
+        .selected {
+            background-color: #333;
+            color: #888;
+        }
+        .disabled {
+            pointer-events: none;
+        }
+
+        select {
+            margin-bottom: 20px;
+            font-size: 16px;
+            position: absolute;
+            top: 20px;
+            background-color: #171717;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 30px;
+            appearance: none;
+            width: 200px;
+            text-align: center;
+            font-family: inherit;
+        }
+        .selected-numbers {
+            position: absolute;
+            bottom: 70px;
+            width: 100%;
+            text-align: center;
+            font-size: 24px;
+            font-weight: normal;
+            display: none;
+        }
+    </style>
+</head>
+<body onload="document.getElementById('numberCount').value = '40'; generateGrid();">
+    <select id="numberCount" onchange="generateGrid()">
+        <option value="10">10</option>
+        <option value="20">20</option>
+        <option value="25">25</option>
+        <option value="30">30</option>
+        <option value="40" selected>40</option>
+        <option value="50">50</option>
+        <option value="60">60</option>
+        <option value="80">80</option>
+        <option value="100">100</option>
+    </select>
+    <div class="grid" id="grid"></div>
+    <div class="selected-numbers" id="selectedNumbers"></div>
+
+    <script>
+        const grid = document.getElementById("grid");
+        const selectedNumbersDisplay = document.getElementById("selectedNumbers");
+        let selectedNumber = null;
+        let availableNumbers = new Set();
+        let lastSelectedCell = null;
+        let turnCount = 0;
+        let selectedNumbersList = [];
+
+        function generateGrid() {
+            const count = parseInt(document.getElementById("numberCount").value, 10);
+            grid.innerHTML = "";
+            selectedNumbersDisplay.innerHTML = "";
+            selectedNumbersDisplay.style.display = "none";
+            availableNumbers = new Set([...Array(count).keys()].map(i => i + 1));
+            selectedNumber = null;
+            lastSelectedCell = null;
+            turnCount = 0;
+            selectedNumbersList = [];
+
+            let columns, rows, cellSize;
+            switch(count) {
+                case 10: columns = 5; rows = 2; cellSize = '60px'; break;
+                case 20: columns = 5; rows = 4; cellSize = '60px'; break;
+                case 25: columns = 5; rows = 5; cellSize = '60px'; break;
+                case 30: columns = 6; rows = 5; cellSize = '60px'; break;
+                case 40: columns = 8; rows = 5; cellSize = '60px'; break;
+                case 50: columns = 10; rows = 5; cellSize = '60px'; break;
+                case 60: columns = 10; rows = 6; cellSize = '60px'; break;
+                case 80: columns = 10; rows = 8; cellSize = '50px'; break;
+                case 100: columns = 10; rows = 10; cellSize = '45px'; break;
+                default: columns = 8; rows = 5; cellSize = '60px';
+            }
+            grid.style.gridTemplateColumns = `repeat(${columns}, ${cellSize})`;
+
+            for (let i = 1; i <= count; i++) {
+                let cell = document.createElement("div");
+                cell.classList.add("number");
+                cell.textContent = i;
+                cell.style.height = cellSize;
+                cell.style.width = cellSize;
+                cell.addEventListener("click", () => selectNumber(i, cell));
+                grid.appendChild(cell);
+            }
+            grid.style.visibility = "visible";
+        }
+
+        function selectNumber(num, cell) {
+            if (!selectedNumber || num % selectedNumber === 0 || selectedNumber % num === 0) {
+                selectedNumber = num;
+                cell.classList.add("selected", "disabled");
+                turnCount++;
+                if (turnCount % 2 === 1) {
+                    cell.classList.add("blue-outline");
+                } else {
+                    cell.classList.add("red-outline");
+                }
+                lastSelectedCell = cell;
+                availableNumbers.delete(num);
+                selectedNumbersList.push(num);
+                selectedNumbersDisplay.textContent = selectedNumbersList.join(" - ");
+                selectedNumbersDisplay.style.display = "block";
+                checkGameOver();
+            }
+        }
+
+        function checkGameOver() {
+            let possibleMoves = Array.from(availableNumbers).some(n => n % selectedNumber === 0 || selectedNumber % n === 0);
+            if (!possibleMoves) {
+                if (lastSelectedCell) {
+                    lastSelectedCell.classList.add("selected");
+                }
+                setTimeout(() => {
+                    alert("Partie terminée ! Aucun choix possible.");
+                }, 200);
+            }
+        }
+    </script>
+</body>
+</html>
